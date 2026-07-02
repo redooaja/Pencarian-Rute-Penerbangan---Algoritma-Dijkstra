@@ -586,7 +586,7 @@ with right_col:
                         st.subheader("🎫 Pesan Tiket Elektronik")
 
                         st.caption(
-                            "Isi nama penumpang untuk mencetak tiket seolah-olah Anda memesannya."
+                            "Isi nama penumpang untuk mencetak tiket."
                         )
 
                         nama_penumpang = st.text_input(
