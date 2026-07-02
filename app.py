@@ -9,6 +9,7 @@ from algorithms.dijkstra import dijkstra
 from utils.load_data import load_graph
 from utils.distance import calculate_total_distance
 from utils.pdf_generator import generate_pdf
+from utils.ticket_generator import generate_ticket
 
 # ==========================================
 # KONFIGURASI HALAMAN
@@ -579,6 +580,54 @@ with right_col:
                                 mime="application/pdf",
                                 use_container_width=True
                             )
+
+                        st.divider()
+
+                        st.subheader("🎫 Pesan Tiket Elektronik")
+
+                        st.caption(
+                            "Isi nama penumpang untuk mencetak tiket seolah-olah Anda memesannya."
+                        )
+
+                        nama_penumpang = st.text_input(
+                            "Nama Penumpang",
+                            value="Penumpang",
+                            key="nama_penumpang_tiket"
+                        )
+
+                        if st.button(
+                            "🎫 Cetak Tiket Elektronik",
+                            use_container_width=True,
+                            key="btn_cetak_tiket"
+                        ):
+
+                            with st.spinner("🎫 Menerbitkan tiket elektronik..."):
+
+                                ticket_file = generate_ticket(
+                                    nama_penumpang=nama_penumpang if nama_penumpang.strip() else "Penumpang",
+                                    kode_asal=asal,
+                                    nama_asal=airport_dict[asal],
+                                    kota_asal=airport_city[asal],
+                                    kode_tujuan=tujuan,
+                                    nama_tujuan=airport_dict[tujuan],
+                                    kota_tujuan=airport_city[tujuan],
+                                    path=path,
+                                    cost=cost,
+                                    total_distance=total_distance
+                                )
+
+                            st.success("Tiket elektronik berhasil diterbitkan! ✅")
+
+                            with open(ticket_file, "rb") as file:
+
+                                st.download_button(
+                                    label="⬇️ Download Tiket (PDF)",
+                                    data=file,
+                                    file_name=f"tiket_{asal}_{tujuan}.pdf",
+                                    mime="application/pdf",
+                                    use_container_width=True,
+                                    key="dl_tiket"
+                                )
 
                     st.divider()
 
