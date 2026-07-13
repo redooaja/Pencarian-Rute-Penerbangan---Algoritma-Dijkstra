@@ -407,7 +407,6 @@ with right_col:
                         )
 
 
-
                         route_names = [
                             f"{airport_dict[kode]} ({airport_city[kode]})"
                             for kode in path
@@ -467,7 +466,7 @@ with right_col:
                             f"{total_distance:,} KM"
                         )
 
-                    st.subheader("🧠 Hasil Optimasi Rute Dijkstra")
+                    st.subheader("🧠 Hasil Optimasi Rute")
 
                     st.success(f"""
                     Bandara Asal :
