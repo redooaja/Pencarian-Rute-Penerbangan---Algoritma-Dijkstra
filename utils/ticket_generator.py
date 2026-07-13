@@ -1,13 +1,4 @@
-"""
-utils/ticket_generator.py
 
-Generator PDF "Tiket Elektronik" bergaya boarding pass.
-Dibuat terpisah dari utils/pdf_generator.py (laporan) agar tidak
-mengubah fungsi yang sudah ada.
-
-Membutuhkan: reportlab
-    pip install reportlab
-"""
 
 import random
 import string

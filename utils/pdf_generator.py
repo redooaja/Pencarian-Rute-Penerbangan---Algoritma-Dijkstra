@@ -34,7 +34,7 @@ def generate_pdf(
 
     content.append(
         Paragraph(
-            "Penerapan Algoritma Dijkstra dalam Optimasi Rute Penerbangan Berbiaya Termurah Antar Bandara di Indonesia",
+            "Penerapan Algoritma Dijkstra dalam Pencarian Rute Penerbangan dengan Biaya Termurah Antar Bandara di Indonesia",
             styles["Heading2"]
         )
     )

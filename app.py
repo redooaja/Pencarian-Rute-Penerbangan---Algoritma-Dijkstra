@@ -23,7 +23,6 @@ st.set_page_config(
 
 # ==========================================
 # CUSTOM CSS — TEMA "SKYLINE"
-# (Tidak mengubah logika, hanya mempercantik tampilan)
 # ==========================================
 
 st.markdown("""
@@ -275,8 +274,8 @@ st.markdown("""
 <div class="hero-banner">
     <div class="hero-title">✈️ Sistem Pencarian Rute Penerbangan</div>
     <p class="hero-subtitle">
-        Penerapan Algoritma Dijkstra dalam Optimasi Rute Penerbangan Berbiaya
-        Termurah Antar Bandara di Indonesia Berbasis Web
+        Penerapan Algoritma Dijkstra dalam Pencarian Rute Penerbangan dengan Biaya
+        Termurah Antar Bandara di Indonesia
     </p>
 </div>
 """, unsafe_allow_html=True)
