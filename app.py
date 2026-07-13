@@ -274,7 +274,7 @@ st.markdown("""
 <div class="hero-banner">
     <div class="hero-title">✈️ Sistem Pencarian Rute Penerbangan</div>
     <p class="hero-subtitle">
-        Penerapan Algoritma Dijkstra dalam Pencarian Rute Penerbangan dengan Biaya
+        Penerapan Graph dan Algoritma Dijkstra dalam Pencarian Rute Penerbangan dengan Biaya
         Termurah Antar Bandara di Indonesia
     </p>
 </div>
