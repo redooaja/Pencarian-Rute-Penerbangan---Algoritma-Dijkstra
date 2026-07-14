@@ -1,6 +1,6 @@
 # Flight Route Finder Indonesia
 
-Penerapan Algoritma Dijkstra dalam Optimasi Rute Penerbangan Berbiaya Termurah Antar Bandara di Indonesia Berbasis Web.
+Penerapan Graph dan Algoritma Dijkstra dalam Pencarian Rute Penerbangan Berbiaya Termurah Antar Bandara di Indonesia Berbasis Web.
 
 ## Fitur
 
@@ -9,6 +9,7 @@ Penerapan Algoritma Dijkstra dalam Optimasi Rute Penerbangan Berbiaya Termurah A
 - Algoritma Dijkstra
 - Detail biaya tiap segmen
 - Download laporan PDF
+- Download Ticket Elektronik
 
 ## Teknologi
 
@@ -16,6 +17,8 @@ Penerapan Algoritma Dijkstra dalam Optimasi Rute Penerbangan Berbiaya Termurah A
 - Streamlit
 - Folium
 - Pandas
+- ReportLab
+- Html
 
 Programnya bisa diakses melalui Link berikut ini :
 https://pencarian-rute-penerbangan---algoritma-dijkstra-cpuipmacfwfdde.streamlit.app/
