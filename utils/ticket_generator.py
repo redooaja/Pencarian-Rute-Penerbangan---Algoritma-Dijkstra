@@ -1,10 +1,9 @@
-
-
 import random
 import string
 import datetime
+import uuid
+import os
 
-from reportlab.lib.pagesizes import landscape
 from reportlab.lib.units import mm
 from reportlab.lib.colors import HexColor
 from reportlab.pdfgen import canvas
@@ -35,8 +34,32 @@ def _generate_seat():
     return f"{baris}{kolom}"
 
 
-def _generate_gate():
-    return f"{random.choice('ABCD')}{random.randint(1, 24)}"
+def _generate_gate(seed_text=None):
+    """
+    Simulasi gate keberangkatan Bandara Supadio Pontianak (PNK).
+    Terminal baru Bandara Supadio memiliki 7 (tujuh) unit garbarata
+    yang beroperasi sejak tahun 2020, sehingga gate disimulasikan
+    dari A1 sampai A7.
+
+    Jika seed_text diberikan, pemilihan gate bersifat deterministik
+    (kode booking/rute yang sama akan selalu mendapat gate yang sama).
+    """
+
+    gate_supadio = [
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "A6",
+        "A7",
+    ]
+
+    if seed_text:
+        rnd = random.Random(seed_text)
+        return rnd.choice(gate_supadio)
+
+    return random.choice(gate_supadio)
 
 
 def _draw_barcode(c, x, y, width, height):
@@ -60,39 +83,26 @@ def generate_ticket(
     path,
     cost,
     total_distance,
-    output_path="tiket_elektronik.pdf",
+    output_path=None,
 ):
-    """
-    Membuat PDF tiket elektronik bergaya boarding pass.
-
-    Parameters
-    ----------
-    nama_penumpang : str
-    kode_asal, nama_asal, kota_asal : str        -> info bandara asal
-    kode_tujuan, nama_tujuan, kota_tujuan : str   -> info bandara tujuan
-    path : list[str]                              -> urutan kode bandara (rute)
-    cost : int/float                               -> total biaya
-    total_distance : int/float                     -> total jarak (KM)
-    output_path : str                              -> path file pdf hasil
-
-    Returns
-    -------
-    str : path file PDF yang dihasilkan
-    """
 
     kode_booking = _generate_kode_booking()
     seat = _generate_seat()
-    gate = _generate_gate()
-    waktu_cetak = datetime.datetime.now()
+    gate = _generate_gate(seed_text=kode_booking + kode_asal + kode_tujuan)
 
+    waktu_cetak = datetime.datetime.now()
     tanggal_cetak = waktu_cetak.strftime("%d-%m-%Y")
     jam_cetak = waktu_cetak.strftime("%H:%M:%S")
     jumlah_transit = max(0, len(path) - 2)
 
-    waktu_cetak = datetime.datetime.now()
-
-    tanggal_cetak = waktu_cetak.strftime("%d-%m-%Y")
-    jam_cetak = waktu_cetak.strftime("%H:%M:%S")
+    # Nama file unik per tiket, disimpan di folder sementara agar tidak
+    # saling menimpa antar penumpang/rute yang berbeda.
+    if output_path is None:
+        os.makedirs("output_tiket", exist_ok=True)
+        output_path = os.path.join(
+            "output_tiket",
+            f"tiket_{kode_asal}_{kode_tujuan}_{uuid.uuid4().hex[:6]}.pdf",
+        )
 
     # Ukuran boarding pass: 260mm x 100mm (landscape, mirip tiket sungguhan)
     PAGE_W, PAGE_H = 260 * mm, 100 * mm
@@ -113,17 +123,18 @@ def generate_ticket(
 
     c.setFillColor(WHITE)
     c.setFont("Helvetica-Bold", 13)
-    c.drawString(8 * mm, PAGE_H - 12 * mm, "✈ PENCARI RUTE PENERBANGAN")
+    c.drawString(8 * mm, PAGE_H - 12 * mm, "\u2708 PENCARI RUTE PENERBANGAN")
     c.setFont("Helvetica", 8)
     c.drawString(8 * mm, PAGE_H - 16.5 * mm, "E-TICKET / BOARDING PASS")
 
     c.setFont("Helvetica-Bold", 9)
-    c.drawRightString(main_w - 8 * mm, PAGE_H - 12 * mm, f"Kode Booking")
+    c.drawRightString(main_w - 8 * mm, PAGE_H - 12 * mm, "Kode Booking")
     c.setFont("Helvetica-Bold", 14)
+    c.setFillColor(CYAN)
     c.drawRightString(main_w - 8 * mm, PAGE_H - 17 * mm, kode_booking)
 
     # ===== RUTE BESAR (kode bandara ala boarding pass) =====
-    route_y = PAGE_H - 40 * mm
+    route_y = PAGE_H - 40 * mm  # 60mm
 
     c.setFillColor(NAVY)
     c.setFont("Helvetica-Bold", 30)
@@ -141,21 +152,12 @@ def generate_ticket(
     c.line(45 * mm, route_y + 8 * mm, main_w - 45 * mm, route_y + 8 * mm)
     c.setFillColor(CYAN)
     c.setFont("Helvetica-Bold", 12)
-    c.drawCentredString(mid_x, route_y + 10 * mm, "✈")
+    c.drawCentredString(mid_x, route_y + 10 * mm, "\u2708")
+
+    jumlah_transit_label = "Langsung" if jumlah_transit == 0 else f"{jumlah_transit} Transit"
     c.setFont("Helvetica", 7)
     c.setFillColor(MUTED)
-    label_transit = "Langsung" if jumlah_transit == 0 else f"{jumlah_transit} Transit"
-    jalur_dijkstra = " ➜ ".join(path)
-
-    c.setFillColor(NAVY)
-    c.setFont("Helvetica", 8)
-
-    c.drawString(
-        8 * mm,
-        16 * mm,
-        f"Jalur Optimal Dijkstra : {jalur_dijkstra}"
-    )
-    c.drawCentredString(mid_x, route_y + 4.5 * mm, label_transit)
+    c.drawCentredString(mid_x, route_y + 4.5 * mm, jumlah_transit_label)
 
     c.setFillColor(NAVY)
     c.setFont("Helvetica-Bold", 30)
@@ -166,56 +168,69 @@ def generate_ticket(
     c.drawRightString(main_w - 8 * mm, route_y - 5 * mm, f"{nama_tujuan}")
     c.drawRightString(main_w - 8 * mm, route_y - 9 * mm, f"{kota_tujuan}")
 
-    # ===== INFO GRID (penumpang, tanggal, gate, kursi, boarding) =====
-    grid_y = 22 * mm
-    labels = [
-    "PENUMPANG",
-    "TANGGAL CETAK",
-    "JAM CETAK",
-    "GATE",
-    "KURSI"
-    ]
+    # ===== GARIS PEMISAH SEBELUM INFO GRID =====
+    c.setStrokeColor(BORDER)
+    c.setLineWidth(0.7)
+    c.line(8 * mm, 40 * mm, main_w - 8 * mm, 40 * mm)
 
+    # ===== INFO GRID (penumpang, tanggal, jam, gate, kursi) =====
+    grid_label_y = 34 * mm
+    grid_value_y = 34 * mm - 5.5 * mm
+
+    labels = ["PENUMPANG", "TANGGAL CETAK", "JAM CETAK", "GATE", "KURSI"]
     values = [
         nama_penumpang.upper(),
         tanggal_cetak,
         jam_cetak,
         gate,
-        seat
+        seat,
     ]
-    col_w = main_w / len(labels)
+
+    grid_left = 8 * mm
+    grid_right = main_w - 8 * mm
+    col_w = (grid_right - grid_left) / len(labels)
 
     for i, (lab, val) in enumerate(zip(labels, values)):
-        x = 8 * mm + i * col_w
+        x = grid_left + i * col_w
+        is_gate = lab == "GATE"
+
         c.setFillColor(MUTED)
+        c.setFont("Helvetica", 6.5)
+        c.drawString(x, grid_label_y, lab)
+
+        c.setFillColor(CYAN if is_gate else NAVY)
+        c.setFont("Helvetica-Bold", 11)
+        val_text = str(val)
+        # Pangkas otomatis kalau teks kepanjangan untuk kolom PENUMPANG
+        if lab == "PENUMPANG" and len(val_text) > 16:
+            val_text = val_text[:15] + "…"
+        c.drawString(x, grid_value_y, val_text)
+
+    c.setFillColor(MUTED)
+    c.setFont("Helvetica-Oblique", 6)
+    c.drawString(
+        grid_left,
+        grid_value_y - 6 * mm,
+        "Gate keberangkatan disimulasikan berdasarkan garbarata Bandara Supadio (PNK)",
+    )
+
+    # ===== BARIS RINGKASAN PERJALANAN (biaya, jarak, transit, algoritma) =====
+    info_y = 14 * mm
+
+    c.setFillColor(NAVY)
+    c.setFont("Helvetica-Bold", 8)
+    c.drawString(grid_left, info_y, f"Total Biaya: Rp {cost:,}")
+    c.drawString(grid_left + 62 * mm, info_y, f"Jarak: {total_distance:,} KM")
+    c.drawString(grid_left + 100 * mm, info_y, f"Transit: {jumlah_transit}")
+    c.drawString(grid_left + 130 * mm, info_y, "Algoritma: Dijkstra")
+
+    jalur_dijkstra = " \u279c ".join(path)
+    c.setFillColor(MUTED)
     c.setFont("Helvetica", 6.5)
-
-    c.drawString(
-    8 * mm,
-    12 * mm,
-    f"Total Biaya : Rp {cost:,}"
-    )
-    
-    c.drawString(
-        70 * mm,
-        12 * mm,
-        f"Jarak : {total_distance:,} KM"
-    )
-    
-    c.drawString(
-        120 * mm,
-        12 * mm,
-        f"Transit : {jumlah_transit}"
-    )
-    
-    c.drawString(
-        150 * mm,
-        12 * mm,
-        "Algoritma : Dijkstra"
-    )
-
-
-
+    jalur_text = f"Jalur Optimal: {jalur_dijkstra}"
+    if len(jalur_text) > 95:
+        jalur_text = jalur_text[:92] + "..."
+    c.drawString(grid_left, info_y - 5 * mm, jalur_text)
 
     # Barcode dekoratif
     _draw_barcode(c, 8 * mm, 2 * mm, main_w - 16 * mm, 4 * mm)
@@ -251,21 +266,23 @@ def generate_ticket(
     c.drawCentredString(stub_x + stub_w / 2, PAGE_H - 38 * mm, kode_tujuan)
 
     info_stub = [
-    ("PENUMPANG", nama_penumpang.upper()[:14]),
-    ("KODE BOOKING", kode_booking),
-    ("TANGGAL", tanggal_cetak),
-    ("JAM", jam_cetak),
-    ("KURSI", seat),
+        ("PENUMPANG", nama_penumpang.upper()[:14]),
+        ("KODE BOOKING", kode_booking),
+        ("GATE", gate),
+        ("TANGGAL", tanggal_cetak),
+        ("JAM", jam_cetak),
+        ("KURSI", seat),
     ]
 
     y_cursor = PAGE_H - 48 * mm
     for lab, val in info_stub:
+        highlight = lab == "GATE"
         c.setFillColor(CYAN)
         c.setFont("Helvetica", 6.5)
         c.drawCentredString(stub_x + stub_w / 2, y_cursor, lab)
         c.setFillColor(WHITE)
-        c.setFont("Helvetica-Bold", 9)
-        c.drawCentredString(stub_x + stub_w / 2, y_cursor - 4.5 * mm, val)
+        c.setFont("Helvetica-Bold", 13 if highlight else 9)
+        c.drawCentredString(stub_x + stub_w / 2, y_cursor - (5.5 if highlight else 4.5) * mm, val)
         y_cursor -= 10 * mm
 
     c.save()
